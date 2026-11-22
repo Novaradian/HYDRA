@@ -40,7 +40,7 @@ jobs:
 
       - name: Rust unit tests — AI bridge (listener, token, MCP protocol, Claude Desktop config)
         working-directory: desktop/src-tauri
-        run: cargo test --lib ai::
+        run: 'cargo test --lib ai::'
 
       - name: Desktop build — HYDRA.exe, installer, MSI
         working-directory: desktop
