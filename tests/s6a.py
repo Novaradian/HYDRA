@@ -1,0 +1,32 @@
+import sys, os, json
+from playwright.sync_api import sync_playwright
+import os; S=os.environ.get('HYDRA_ROOT', os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..' if os.path.basename(os.path.dirname(os.path.abspath(__file__)))=='tests' else '../..')))
+R=[]
+def check(n,c,x=''): R.append(('PASS' if c else 'FAIL',n,str(x)[:300]))
+with sync_playwright() as p:
+    b=p.chromium.launch(); ctx=b.new_context(viewport={'width':1500,'height':940}, accept_downloads=True); pg=ctx.new_page()
+    errs=[]; pg.on('pageerror',lambda e: errs.append(str(e))); pg.on('console',lambda m: errs.append('console:'+m.text) if m.type=='error' else None)
+    pg.goto('file://'+S+'/dist/HYDRA/HYDRA.html'); pg.wait_for_timeout(2500)
+    ev=pg.evaluate; H="window.HYDRA.S"; DS="window.HYDRA.designer.st"; SIM="window.HYDRA.designer.sim"
+    ev("window.HYDRA.actions.openSampleCopy('s_basic_cyl')"); pg.wait_for_timeout(1200)
+    check('sample opened in designer', pg.query_selector('.hd .dcanvas') is not None)
+    check('one doc', ev(f"{H}.docs.value.length")==1)
+    pg.screenshot(path=S+'/v5_sample.png')
+    ev(f"{DS}.D.value.simRun()"); pg.wait_for_timeout(1500)
+    info=ev(f"(()=>{{const s={SIM}.SIM; return {{n:s.n, els:s.els.map(e=>e.tag+':'+e.kind), t:s.t, p:Array.from(s.p).map(x=>Math.round(x/1e5*10)/10), issues:s.issues.map(i=>i.text)}}}})()")
+    print(json.dumps(info, indent=0)[:1500])
+    check('sim running', info['t']>0.5, info['t'])
+    # find valve and click to position 0 (a)
+    vk=ev(f"{SIM}.SIM.els.find(e=>e.kind==='valve').key")
+    ev(f"{SIM}.simClickValve('{vk}', 0)"); pg.wait_for_timeout(3000)
+    cyl=ev(f"(()=>{{const e={SIM}.SIM.els.find(e=>e.kind==='actuator'); return [e.state.x, e.state.v, e.read().text]}})()")
+    print('cyl after a', cyl, ev(f"Array.from({SIM}.SIM.p).map(x=>Math.round(x/1e5*10)/10)"))
+    pg.screenshot(path=S+'/v5_sim_a.png')
+    ev(f"{SIM}.simClickValve('{vk}', 2)"); pg.wait_for_timeout(4000)
+    cyl2=ev(f"(()=>{{const e={SIM}.SIM.els.find(e=>e.kind==='actuator'); return [e.state.x, e.state.v, e.read().text]}})()")
+    print('cyl after b', cyl2)
+    check('cylinder moved both ways', abs(cyl[0]-cyl2[0])>0.05, (cyl,cyl2))
+    pg.screenshot(path=S+'/v5_sim_b.png')
+    print('errs', errs[:8])
+    b.close()
+for r in R: print(*r)

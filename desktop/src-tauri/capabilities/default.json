@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "HYDRA main window: core only. File access goes through HYDRA's own commands (project folder only).",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

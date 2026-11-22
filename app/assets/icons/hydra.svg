@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>HYDRA</title>
+  <defs>
+    <linearGradient id="hb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E3B4B"/><stop offset="1" stop-color="#1B2633"/></linearGradient>
+  </defs>
+  <!-- tile -->
+  <rect width="512" height="512" rx="112" fill="url(#hb)"/>
+  <!-- H: two pressure lines joined by a working line through a pump (ISO 1219: circle + filled triangle = hydraulic) -->
+  <g fill="none" stroke="#F3F6F9" stroke-linecap="round">
+    <path d="M128 116V396M384 116V396" stroke-width="54"/>
+    <path d="M140 256H372" stroke-width="30"/>
+  </g>
+  <circle cx="256" cy="256" r="58" fill="#0A64C2" stroke="#F3F6F9" stroke-width="16"/>
+  <path d="M256 210L295 278H217Z" fill="#F3F6F9" stroke="#F3F6F9" stroke-width="5" stroke-linejoin="round"/>
+</svg>

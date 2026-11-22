@@ -1,0 +1,16 @@
+{
+  "name": "hydra-desktop",
+  "private": true,
+  "version": "0.8.0",
+  "description": "HYDRA.exe — the offline web build (../dist/HYDRA) in a Tauri 2 window",
+  "scripts": {
+    "icons": "tauri icon app-icon.png -o src-tauri/icons",
+    "web": "cd ../app && node build.mjs",
+    "build": "npm run web && tauri build",
+    "portable": "npm run web && tauri build --no-bundle",
+    "dev": "npm run web && tauri dev"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.1.0"
+  }
+}

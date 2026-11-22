@@ -1,0 +1,755 @@
+{
+ "tools": [
+  {
+   "name": "get_project_info",
+   "description": "Project summary: sheets (id, name, type, part and line counts) and the tags in use.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [],
+    "properties": {}
+   }
+  },
+  {
+   "name": "get_sheet",
+   "description": "One sheet as compact JSON: parts (tag, ref, x, y in mm, changed values) and nets (the ports each net joins). Pass plan to read a proposed plan.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [],
+    "properties": {
+     "sheet": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "sheet id or name; default: the open sheet"
+     },
+     "plan": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+     },
+     "full": {
+      "type": "boolean"
+     }
+    }
+   }
+  },
+  {
+   "name": "search_library",
+   "description": "Find parts in the ISO 1219 library. Returns the top matches: ref, name, port names.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "query"
+    ],
+    "properties": {
+     "query": {
+      "type": "string",
+      "maxLength": 120
+     },
+     "domain": {
+      "type": "string",
+      "enum": [
+       "hydraulic",
+       "pneumatic"
+      ]
+     },
+     "category": {
+      "type": "string",
+      "maxLength": 60
+     },
+     "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 25
+     }
+    }
+   }
+  },
+  {
+   "name": "describe_part",
+   "description": "Ports (name, role) and settable values (key, unit, default) of one library part.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "ref"
+    ],
+    "properties": {
+     "ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+     }
+    }
+   }
+  },
+  {
+   "name": "validate",
+   "description": "Rule check of a sheet or a plan: open ports, missing relief valve, bad links. Returns problems only.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [],
+    "properties": {
+     "sheet": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "sheet id or name; default: the open sheet"
+     },
+     "plan": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+     }
+    }
+   }
+  },
+  {
+   "name": "run_sim",
+   "description": "Run the solver for t_end s (max 60). events switch valves: {t, tag, pos: a | 0 | b | rest}. Returns a summary: peak bar, actuator end times, warnings.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "t_end"
+    ],
+    "properties": {
+     "sheet": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "sheet id or name; default: the open sheet"
+     },
+     "plan": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+     },
+     "t_end": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 60
+     },
+     "events": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "t",
+        "tag",
+        "pos"
+       ],
+       "properties": {
+        "t": {
+         "type": "number",
+         "minimum": 0
+        },
+        "tag": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 200
+        },
+        "pos": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 8
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "add_component",
+   "description": "Place one library part (ref) with an ISO tag and values.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "ref"
+    ],
+    "properties": {
+     "ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+     },
+     "tag": {
+      "type": "string",
+      "maxLength": 20,
+      "description": "ISO 1219-2, e.g. 1V2"
+     },
+     "as": {
+      "type": "string",
+      "maxLength": 40
+     },
+     "x": {
+      "type": "number"
+     },
+     "y": {
+      "type": "number"
+     },
+     "rot": {
+      "type": "number"
+     },
+     "mirror": {
+      "type": "boolean"
+     },
+     "values": {
+      "type": "object",
+      "maxProperties": 60,
+      "additionalProperties": {
+       "type": [
+        "number",
+        "string",
+        "boolean"
+       ]
+      },
+      "description": "e.g. {\"set\":\"120 bar\"}; plain numbers use bar, L/min, mm …"
+     },
+     "desc": {
+      "type": "string",
+      "maxLength": 200
+     },
+     "sheet": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "sheet id or name; default: the open sheet"
+     }
+    }
+   }
+  },
+  {
+   "name": "set_param",
+   "description": "Set values of a placed part: key + value, or values {key: \"120 bar\"}. Values belong to the placed part, not the library.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "tag"
+    ],
+    "properties": {
+     "sheet": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "sheet id or name; default: the open sheet"
+     },
+     "tag": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+     },
+     "key": {
+      "type": "string",
+      "maxLength": 60
+     },
+     "value": {
+      "type": [
+       "number",
+       "string"
+      ]
+     },
+     "values": {
+      "type": "object",
+      "maxProperties": 60,
+      "additionalProperties": {
+       "type": [
+        "number",
+        "string",
+        "boolean"
+       ]
+      },
+      "description": "e.g. {\"set\":\"120 bar\"}; plain numbers use bar, L/min, mm …"
+     }
+    }
+   }
+  },
+  {
+   "name": "connect",
+   "description": "Join ports into one net (3 or more ports get a junction). kind: work, pilot or drain.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "ports"
+    ],
+    "properties": {
+     "sheet": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "sheet id or name; default: the open sheet"
+     },
+     "ports": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 40,
+      "items": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 200
+      },
+      "description": "TAG.PORT, e.g. [\"1P1.P\",\"1V1.P\"]"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "work",
+       "pilot",
+       "drain"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "remove",
+   "description": "Remove parts (by tag) and their lines.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "tags"
+    ],
+    "properties": {
+     "sheet": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "sheet id or name; default: the open sheet"
+     },
+     "tags": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 200,
+      "items": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 200
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "move_component",
+   "description": "Move a part to x, y (mm); its lines follow.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "tag",
+     "x",
+     "y"
+    ],
+    "properties": {
+     "sheet": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "sheet id or name; default: the open sheet"
+     },
+     "tag": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+     },
+     "x": {
+      "type": "number"
+     },
+     "y": {
+      "type": "number"
+     },
+     "rot": {
+      "type": "number"
+     }
+    }
+   }
+  },
+  {
+   "name": "build_circuit",
+   "description": "Whole circuit in one call. parts: [{tag, ref, x?, y?, rot?, values?}], nets: [{ports: [\"1P1.P\",\"1V1.P\"], kind?}]. HYDRA adds no parts itself. With approval on, returns a plan_id shown in HYDRA as a ghost.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [],
+    "properties": {
+     "sheet": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "sheet id or name; default: the open sheet"
+     },
+     "replace": {
+      "type": "boolean"
+     },
+     "parts": {
+      "type": "array",
+      "maxItems": 200,
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "ref"
+       ],
+       "properties": {
+        "ref": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 200
+        },
+        "tag": {
+         "type": "string",
+         "maxLength": 20,
+         "description": "ISO 1219-2, e.g. 1V2"
+        },
+        "as": {
+         "type": "string",
+         "maxLength": 40
+        },
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "rot": {
+         "type": "number"
+        },
+        "mirror": {
+         "type": "boolean"
+        },
+        "values": {
+         "type": "object",
+         "maxProperties": 60,
+         "additionalProperties": {
+          "type": [
+           "number",
+           "string",
+           "boolean"
+          ]
+         },
+         "description": "e.g. {\"set\":\"120 bar\"}; plain numbers use bar, L/min, mm …"
+        },
+        "desc": {
+         "type": "string",
+         "maxLength": 200
+        }
+       }
+      }
+     },
+     "nets": {
+      "type": "array",
+      "maxItems": 300,
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "ports"
+       ],
+       "properties": {
+        "kind": {
+         "type": "string",
+         "enum": [
+          "work",
+          "pilot",
+          "drain"
+         ]
+        },
+        "ports": {
+         "type": "array",
+         "minItems": 2,
+         "maxItems": 40,
+         "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+         },
+         "description": "TAG.PORT, e.g. [\"1P1.P\",\"1V1.P\"]"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "get_question_template",
+   "description": "Built-in follow-up questions for a circuit type (lift, press, clamping, power_pack, cylinder, motor_drive, pneumatic). Start from these, add your own, then ask_user.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "circuit_type"
+    ],
+    "properties": {
+     "circuit_type": {
+      "type": "string",
+      "maxLength": 40,
+      "description": "lift, press, clamping, power_pack, cylinder, motor_drive, pneumatic"
+     }
+    }
+   }
+  },
+  {
+   "name": "ask_user",
+   "description": "Show a short form in HYDRA (each question gets \"Let AI decide\"). Then stop: the answers arrive in the next message. Claude Desktop: ask in your own chat instead.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "title",
+     "questions"
+    ],
+    "properties": {
+     "title": {
+      "type": "string",
+      "maxLength": 120
+     },
+     "questions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "id",
+        "label",
+        "type"
+       ],
+       "properties": {
+        "id": {
+         "type": "string",
+         "maxLength": 40
+        },
+        "label": {
+         "type": "string",
+         "maxLength": 80
+        },
+        "type": {
+         "type": "string",
+         "enum": [
+          "select",
+          "number",
+          "radio",
+          "check",
+          "text"
+         ]
+        },
+        "options": {
+         "type": "array",
+         "maxItems": 12,
+         "items": {
+          "type": "string",
+          "maxLength": 60
+         }
+        },
+        "unit": {
+         "type": "string",
+         "maxLength": 12
+        },
+        "value": {
+         "type": [
+          "number",
+          "string",
+          "boolean"
+         ]
+        },
+        "decide": {
+         "type": "boolean"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "propose_bom",
+   "description": "Show the parts list for approval. HYDRA adds its mandatory parts (relief valve per pump, tank, lift safety valves) and returns the full list. Then stop and wait for approval before build_circuit.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "rows"
+    ],
+    "properties": {
+     "title": {
+      "type": "string",
+      "maxLength": 120
+     },
+     "circuit_type": {
+      "type": "string",
+      "maxLength": 40
+     },
+     "pressure": {
+      "type": "string",
+      "maxLength": 20
+     },
+     "rows": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 120,
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "tag",
+        "part"
+       ],
+       "properties": {
+        "tag": {
+         "type": "string",
+         "maxLength": 20
+        },
+        "part": {
+         "type": "string",
+         "maxLength": 80
+        },
+        "ref": {
+         "type": "string",
+         "maxLength": 80
+        },
+        "rating": {
+         "type": "string",
+         "maxLength": 60
+        }
+       }
+      }
+     },
+     "assumptions": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+       "type": "string",
+       "maxLength": 160
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "insert_template",
+   "description": "Insert one of the user's saved templates (by name) at x, y; tags are renumbered.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name"
+    ],
+    "properties": {
+     "sheet": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "sheet id or name; default: the open sheet"
+     },
+     "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+     },
+     "x": {
+      "type": "number"
+     },
+     "y": {
+      "type": "number"
+     }
+    }
+   }
+  },
+  {
+   "name": "create_for",
+   "description": "After the hydraulic circuit is applied: generate electric sheets (PLC I/O, motor starters), a PLC program (AUTO sequence, homing) or the operator panel from the sheet's tags. sequence like [\"1A1+\",\"1A1-\"].",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "domain"
+    ],
+    "properties": {
+     "sheet": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "sheet id or name; default: the open sheet"
+     },
+     "domain": {
+      "type": "string",
+      "enum": [
+       "electric",
+       "logic",
+       "controller"
+      ]
+     },
+     "sequence": {
+      "type": "array",
+      "maxItems": 60,
+      "items": {
+       "type": "string",
+       "maxLength": 12
+      },
+      "description": "AUTO steps, e.g. [\"1A1+\",\"1A2+\",\"1A2-\",\"1A1-\"]; default: all extend, then retract"
+     },
+     "name": {
+      "type": "string",
+      "maxLength": 80
+     }
+    }
+   }
+  },
+  {
+   "name": "get_plan",
+   "description": "Status of a plan: added and removed parts, rule-check problems, solver result.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "plan_id"
+    ],
+    "properties": {
+     "plan_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+     }
+    }
+   }
+  },
+  {
+   "name": "apply_plan",
+   "description": "Apply a plan. With \"Edit with approval\" the user presses Apply in HYDRA and the answer is waiting_for_user.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "plan_id"
+    ],
+    "properties": {
+     "plan_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+     }
+    }
+   }
+  },
+  {
+   "name": "discard_plan",
+   "description": "Drop a plan; the drawing is not changed.",
+   "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "plan_id"
+    ],
+    "properties": {
+     "plan_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+     }
+    }
+   }
+  }
+ ]
+}

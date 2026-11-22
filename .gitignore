@@ -1,0 +1,21 @@
+# dependencies
+node_modules/
+
+# build output (published as a GitHub Release zip, not committed)
+dist/
+desktop/src-tauri/target/
+desktop/src-tauri/gen/
+
+# files the Playwright suites write next to the repository root
+/*.png
+/*.json
+/*.hydra
+tests/**/*.png
+__pycache__/
+
+# editors / OS
+.vscode/
+.idea/
+*.log
+Thumbs.db
+.DS_Store
