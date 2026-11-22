@@ -13,6 +13,37 @@ import { mcpState, claudeConfig, detectCli, keySet, keyHas, keyDelete } from './
 import { refreshCli, refreshKeys } from './providers';
 
 const close = () => S.closeModal();
+const copy = (x: string) => { navigator.clipboard?.writeText(x); S.toast(t('Copied'), 'ok'); };
+/** a command the user pastes into PowerShell, with a Copy button */
+const Cmd = ({ c }: { c: string }) => <span class="aicmd"><code>{c}</code><button class="link" onClick={() => copy(c)}>{t('Copy')}</button></span>;
+/** plain-language setup for people who have never used a command line; open by default until the tool is found */
+export function CliSteps({ tool, found }: { tool: 'claude' | 'codex'; found: boolean }) {
+  const ps = <li>{t('Open PowerShell: press the Windows key, type PowerShell and press Enter.')}</li>;
+  return <details class="aisteps" open={!found}><summary>{found ? t('First time? How to sign in') : t('How to set up (about 5 minutes)')}</summary>
+    {tool === 'claude' ? <>
+      {!found && <><b>{t('1. Install Claude Code')}</b><ol>{ps}
+        <li>{t('Paste this line and press Enter:')} <Cmd c="irm https://claude.ai/install.ps1 | iex" /></li>
+        <li>{t('Wait until it says the installation is complete, then close PowerShell.')}</li>
+        <li>{t('Close HYDRA and start it again, then press Scan again.')}</li></ol></>}
+      <b>{found ? t('Sign in once') : t('2. Sign in once')}</b><ol>{ps}
+        <li>{t('Type this and press Enter:')} <Cmd c="claude" /></li>
+        <li>{t('Press Enter to accept the colour style.')}</li>
+        <li>{t('Choose "Claude account with subscription". Your browser opens: sign in and press Authorize. If the browser shows a code, paste it into PowerShell and press Enter.')}</li>
+        <li>{t('When you see the > prompt, type /exit and press Enter. Done — you never need to do this again.')}</li></ol>
+      <b>{found ? t('Then') : t('3. Use it')}</b><ol><li>{t('Press Use Claude below, then chat in HYDRA’s AI panel.')}</li></ol>
+      <p class="muted small">{t('Needs a paid Claude plan (Pro or Max) or Claude Console credit. "Not logged in" in the AI panel means the sign-in above is not done yet.')}</p>
+    </> : <>
+      {!found && <><b>{t('1. Install Codex')}</b><ol>
+        <li>{t('Install Node.js (LTS) from nodejs.org, using the default options.')}</li>{ps}
+        <li>{t('Paste this line and press Enter:')} <Cmd c="npm install -g @openai/codex" /></li>
+        <li>{t('Close HYDRA and start it again, then press Scan again.')}</li></ol></>}
+      <b>{found ? t('Sign in once') : t('2. Sign in once')}</b><ol>{ps}
+        <li>{t('Type this and press Enter:')} <Cmd c="codex login" /></li>
+        <li>{t('Your browser opens: sign in with your ChatGPT account and allow access. Then close PowerShell.')}</li></ol>
+      <b>{found ? t('Then') : t('3. Use it')}</b><ol><li>{t('Press Use ChatGPT below, then chat in HYDRA’s AI panel.')}</li></ol>
+    </>}
+  </details>;
+}
 export function ConnectDlg() {
   const s = aiSettings.value; const desk = isDesktop();
   const set = (p: Partial<AiSettings>) => saveAiSettings({ ...aiSettings.peek(), ...p });
@@ -35,10 +66,11 @@ export function ConnectDlg() {
       <section><h4>{t('A · AI inside HYDRA')}</h4><p class="muted small">{t('Chat in HYDRA’s AI panel.')}</p>
         <div class="aicard"><div class="aicon-h"><b>Claude</b><span class="muted">{t('via Claude Code CLI')}</span><Badge kind="info">{t('Experimental')}</Badge><div class="grow" />{cli && found(cli.claude)}</div>
           <p class="muted small">{t('Sign-in happens in Claude Code. HYDRA never sees your password or token. Check that your Claude plan allows use through other apps.')}</p>
+          {cli && <CliSteps tool="claude" found={!!cli.claude} />}
           <div class="aibtns">{prov('claude-cli') && cli?.claude && <Btn kind={s.provider === 'claude-cli' ? 'primary' : undefined} label={s.provider === 'claude-cli' ? t('In use') : t('Use Claude')} onClick={() => use('claude-cli')} />}<Btn label={t('Scan again')} onClick={scan} /></div></div>
         <div class="aicard"><div class="aicon-h"><b>ChatGPT</b><span class="muted">{t('via Codex CLI')}</span><Badge kind="info">{t('Experimental')}</Badge><div class="grow" />{cli && found(cli.codex)}</div>
-          {cli && !cli.codex && <p class="muted small">{t('Install Codex, then sign in with ChatGPT in Codex:')} <code>npm install -g @openai/codex</code></p>}
-          {cli?.codex && cli.codexSignedIn === false && <p class="aiwarn small">{t('Codex is not signed in — run')} <code>codex login</code></p>}
+          {cli?.codex && cli.codexSignedIn === false && <p class="aiwarn small">{t('Codex is not signed in — follow “Sign in once” below.')}</p>}
+          {cli && <CliSteps tool="codex" found={!!cli.codex} />}
           <div class="aibtns">{prov('codex-cli') && cli?.codex && <Btn kind={s.provider === 'codex-cli' ? 'primary' : undefined} label={s.provider === 'codex-cli' ? t('In use') : t('Use ChatGPT')} onClick={() => use('codex-cli')} />}<Btn label={t('Scan again')} onClick={scan} /></div></div>
         <div class="aicard"><div class="aicon-h"><b>{t('Own API key')}</b><div class="grow" />{(has.anthropic || has.openai) && <Badge kind="ok">{[has.anthropic && 'Anthropic', has.openai && 'OpenAI'].filter(Boolean).join(' · ')} {t('saved')}</Badge>}</div>
           <div class="airow"><select class="in sm" value={keyProv} onChange={(e: any) => setKeyProv(e.target.value)}><option value="anthropic">Anthropic</option><option value="openai">OpenAI</option></select>

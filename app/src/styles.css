@@ -687,6 +687,14 @@ html.paper-theme .dcanvas svg rect[filter="url(#dshadow)"]{fill:var(--paper)}
 .aibom td,.aibom th{padding:3px 5px}.aibom input{width:100%;min-width:70px}
 .aicmds{margin:0;font-family:var(--mono);font-size:10.5px;background:var(--soft);border:1px solid var(--line);padding:6px 7px;white-space:pre-wrap;max-height:170px;overflow:auto;color:var(--ink2)}
 .aiwarn{color:var(--warn);margin:0}
+.aisteps{border:1px solid var(--line);background:var(--soft);padding:6px 9px;margin:6px 0;font-size:12px}
+.aisteps summary{cursor:pointer;font-weight:600;color:var(--accent,var(--ink))}
+.aisteps b{display:block;margin-top:7px}
+.aisteps ol{margin:3px 0 0;padding-left:20px}
+.aisteps li{margin:2px 0}
+.aicmd{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.aicmd code{font-family:var(--mono);background:var(--bg,#fff);border:1px solid var(--line);padding:1px 5px;user-select:all}
+.aimsg .aihelp{display:block;margin-top:5px;color:var(--ink2)}
 .aiprob{margin:0;padding-left:16px;font-size:11px}.aiprob li.err{color:var(--err)}.aiprob li.warn{color:var(--warn)}
 .aisim{display:flex;gap:6px;align-items:center;padding:5px 7px;font-size:11.5px;font-weight:600}
 .aisim.ok{background:var(--ok-t);color:var(--ok)}.aisim.bad{background:var(--err-t);color:var(--err)}.aisim.wait{background:var(--soft);color:var(--mute);font-weight:400}

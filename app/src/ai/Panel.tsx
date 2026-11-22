@@ -55,11 +55,18 @@ export function AiPanel({ docked }: { docked?: boolean }) {
     <Composer />
   </div>;
 }
+/** a sign-in error from the Claude Code / Codex CLI gets a plain-language hint and a link to the setup steps */
+const LOGIN_RE = /not logged in|\/login|please (log|sign) in|codex login|unauthori[sz]ed|authentication|invalid api key/i;
+function loginHelp(text: string) {
+  if (!LOGIN_RE.test(text || '')) return null;
+  const who = provider.value?.id === 'codex-cli' ? 'Codex' : 'Claude Code';
+  return <span class="aihelp">{t('{{who}} is installed but not signed in yet. Sign in once in PowerShell — it takes a minute.', { who })} <button class="link" onClick={() => S.openModal('aiconnect')}>{t('Show me how')}</button></span>;
+}
 function ItemView({ it }: { it: Item }) {
   switch (it.kind) {
     case 'user': return <div class="aimsg user">{it.text}</div>;
     case 'ai': return <div class="aimsg ai">{it.text}</div>;
-    case 'error': return <div class="aimsg err"><Icon name="circle-alert" size={13} />{it.text}</div>;
+    case 'error': return <div class="aimsg err"><Icon name="circle-alert" size={13} />{it.text}{loginHelp(it.text)}</div>;
     case 'questions': return <QuestionsCard it={it} />;
     case 'bom': return <BomCard it={it} />;
     case 'plan': return <PlanCard planId={it.planId} />;

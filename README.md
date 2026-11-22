@@ -1,13 +1,26 @@
-<p align="center"><img src="app/assets/icons/hydra.svg" width="96" alt="HYDRA logo"></p>
+<p align="center"><img src="docs/images/hydra-banner.png" alt="HYDRA — offline CAD and simulator for hydraulic, pneumatic and electrical circuits, with a block-based PLC"></p>
 
-# HYDRA
+<p align="center">
+  <a href="../../releases/latest"><img src="https://img.shields.io/github/v/release/Novaradian/HYDRA?label=Download&style=for-the-badge&color=0a66c2" alt="Download the latest release"></a>
+  <a href="../../releases"><img src="https://img.shields.io/github/downloads/Novaradian/HYDRA/total?style=for-the-badge&color=2ea043" alt="Total downloads"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-555?style=for-the-badge" alt="MIT license"></a>
+</p>
+
+<p align="center"><b><a href="../../releases/latest">Download for Windows</a></b> · or run it in Chrome / Edge from a folder · free and open source</p>
 
 **Offline 2D CAD and simulator for hydraulic, pneumatic and electrical circuits, with a block-based PLC and operator panels.**
 
-HYDRA runs entirely in your browser from a folder on your disk: no installation, no admin rights, no internet, no
-account. Fluid-power symbols follow **ISO 1219**; electrical symbols follow **IEC 60617**.
+Draw a circuit, press **F5** and watch it run: pressures in colour, cylinders moving, the PLC stepping through its
+sequence and the operator panel live. No installation needed, no admin rights, no internet, no account.
+Fluid-power symbols follow **ISO 1219**; electrical symbols follow **IEC 60617**.
 
-![Circuit Designer](docs/images/designer.png)
+![A 400 kN clamping press running: circuit, simulation and operator panel](docs/images/machine-running.png)
+
+| AI assistant: describe a circuit, review the preview, press Apply | Circuit Designer |
+|---|---|
+| ![AI assistant building a clamping circuit](docs/images/ai-assistant.png) | ![Circuit Designer](docs/images/designer.png) |
+| **Logic Coder: a PLC in blocks** | **Operator panel** |
+| ![Logic Coder](docs/images/logic-coder.png) | ![Operator panel](docs/images/operator-panel.png) |
 
 ## Features
 - **Circuit Designer**: hydraulic and pneumatic sheets.
@@ -33,15 +46,24 @@ account. Fluid-power symbols follow **ISO 1219**; electrical symbols follow **IE
   - After a circuit is applied, **Create Electric / Logic Code / Controller-HMI** generate the PLC I/O sheets, the PLC program and the operator panel from its tags.
   - Every AI change is shown as a faded preview, checked by the solver, and applied only when you press **Apply**, as one undo step.
   - Projects marked **Private** are never sent to any AI.
+  - New to command lines? *Connect an AI* shows step-by-step install and sign-in instructions for Claude Code and Codex.
 - **Themes**: Stitch (default), Light Grey, Graphite Dark, Blueprint, High Contrast, or your own colours.
 - **Samples**: six teaching circuits and one complete machine, a 400 kN clamping press.
   - The press includes a power unit, press and clamp sheets, electric and PLC sheets, a PLC program and an operator panel.
 
-| Logic Coder | Operator panel | Graphite Dark theme |
-|---|---|---|
-| ![Logic Coder](docs/images/logic-coder.png) | ![Operator panel](docs/images/operator-panel.png) | ![Theme](docs/images/theme-graphite-dark.png) |
+<details><summary>More screenshots: Graphite Dark theme, AI setup steps</summary>
+
+![Graphite Dark theme](docs/images/theme-graphite-dark.png)
+
+![Connect an AI: install and sign-in steps](docs/images/ai-setup.png)
+</details>
 
 ## Download and run
+**Windows app (recommended):** from the [latest release](../../releases/latest), download
+`HYDRA_<version>_x64-setup.exe` (installer) or `HYDRA-<version>-portable.exe` (no install, run it from any folder).
+The app adds a project folder, autosave, backups and the optional AI connections.
+
+**In the browser:**
 1. Download `HYDRA-<version>.zip` from the [Releases](../../releases) page and unzip it anywhere.
 2. Double-click **`HYDRA.html`**. It opens in Chrome or Edge. Firefox works, except for direct file saving.
 
