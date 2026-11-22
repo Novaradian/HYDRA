@@ -55,9 +55,19 @@ with sync_playwright() as p:
     # tool calls from the AI app, with the user's permission level
     ev(f"(()=>{{const X=window.HYDRA; X.Pj.setProject(X.Pj.newProjectData({{name:'MCP test',template:'blank',unitSystem:'SI-bar'}}),{{dirty:true}}); X.S.addNode('sheet', null, 'hydraulic', 'Clamp');}})()")
     r=ev("window.__mcp('m2','get_project_info',{})"); check('MCP read call answered', r['ok'] and r['data']['name']=='MCP test', r)
+    # the AI panel shows the outside MCP app separately from its own (not connected) provider
+    ev(f"{A}.session.togglePanel(true)"); w(300); hd=lambda: ev("document.querySelector('.aihead').textContent")
+    check('panel header: MCP app active, own AI still Not connected', 'MCP: AI app · active' in hd() and 'Not connected' in hd(), hd())
+    check('empty state: an MCP app is using HYDRA', 'using HYDRA over MCP' in ev("document.querySelector('.aiempty')?.textContent||''"))
+    ev("window.__listeners['ai-mcp-call']({payload:{rid:'m2b',tool:'get_sheet',args:{},client:'claude-desktop'}})"); w(200)
+    check('panel names the MCP client', 'MCP: claude-desktop · active' in hd(), hd())
+    ev(f"{A}.mcpLast.value={{...{A}.mcpLast.value, t:Date.now()-10*60e3}}"); w(200)
+    check('MCP indicator gone after a quiet spell', ev("!document.querySelector('.aihead .aimcp')"), hd())
+    ev(f"{A}.session.togglePanel(false)"); w()
     part={'parts':[{'tag':'1A1','ref':'h_cyl_double','x':150,'y':60},{'tag':'1Z1','ref':'h_tank','x':150,'y':200}]}
     r=ev("(a)=>window.__mcp('m3','build_circuit',a)", part)
     check('Edit with approval (default): edit becomes a plan', r['ok'] and r['data'].get('plan_id') and ev(f"Object.values({H}.project.value.circuits)[0].components.length")==0, r)
+    check('MCP plan shown in the AI panel for Apply', any(x['kind']=='plan' and x['planId']==r['data']['plan_id'] for x in ev(f"{A}.session.thread.value")), r)
     r=ev("(id)=>window.__mcp('m4','apply_plan',{plan_id:id})", r['data']['plan_id']); check('AI cannot apply: waits for the user', r['ok'] and r['data']['status']=='waiting_for_user', r)
     ev(f"{A}.settings.saveAiSettings({{...{A}.settings.aiSettings.value, mcpPerm:'read'}})")
     r=ev("(a)=>window.__mcp('m5','build_circuit',a)", part); check('Read only: edits refused', not r['ok'] and 'Read-only access' in r['error'], r)

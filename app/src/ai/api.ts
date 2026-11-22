@@ -33,6 +33,9 @@ export type Step = { cmd: string; args?: any };
 // ---------- activity log (shown later in the AI log tab) ----------
 export type LogRow = { t: string; source: Source; cmd: string; args: string; ok: boolean; note: string };
 export const aiLog = signal<LogRow[]>([]);
+// last call from an outside MCP app (Claude Desktop, Claude Code… via HYDRA.exe --mcp); the AI panel shows it as active for a few minutes
+export const mcpLast = signal<{ client: string; t: number; ok: boolean } | null>(null);
+export const MCP_ACTIVE_MS = 5 * 60e3;
 function log(source: Source, cmd: string, args: any, r: Result) {
   const a = isPrivate(S.project.peek()) ? '(Private project — not logged)' : JSON.stringify(args ?? {}); const row: LogRow = { t: new Date().toISOString(), source, cmd, args: a.length > 400 ? a.slice(0, 400) + '…' : a, ok: r.ok, note: r.ok ? ((r as any).undo || '') : (r as any).error };
   aiLog.value = [...aiLog.peek().slice(-499), row];

@@ -3,7 +3,7 @@
 // Edit freely) — never what the AI client asks for. The listener is open only while AI features and MCP are on.
 import { signal, effect } from '@preact/signals';
 import { aiSettings, isDesktop } from './settings';
-import { call } from './api';
+import { call, mcpLast } from './api';
 import { cliClient } from './providers';
 import { push } from './session';
 
@@ -20,7 +20,10 @@ export async function startMcpBridge() {
     const fromCli = !!client && client === cliClient;
     let result: any;
     if (fromCli) { result = call(String(tool || ''), a, { source: 'cli', perm: 'approve' }); if (result.ok && result.data?.plan_id && result.data.status === 'ready') push({ kind: 'plan', planId: result.data.plan_id }); }
-    else result = s.enabled && s.mcp ? call(String(tool || ''), a, { source: 'mcp', perm: s.mcpPerm }) : { ok: false, error: 'The MCP server is off in HYDRA (Settings › AI & Connections)' };
+    else if (s.enabled && s.mcp) { result = call(String(tool || ''), a, { source: 'mcp', perm: s.mcpPerm }); mcpLast.value = { client: String(client || ''), t: Date.now(), ok: !!result.ok };
+      // Edit with approval: the plan card (with Apply) goes into the AI panel so the user can approve it in HYDRA
+      if (result.ok && result.data?.plan_id && result.data.status === 'ready') push({ kind: 'plan', planId: result.data.plan_id }); }
+    else result = { ok: false, error: 'The MCP server is off in HYDRA (Settings › AI & Connections)' };
     T().core.invoke('ai_mcp_reply', { rid, result }).catch(() => { });
   });
   effect(() => {

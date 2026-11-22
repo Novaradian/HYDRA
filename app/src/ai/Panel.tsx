@@ -9,7 +9,7 @@ import { Icon, Btn } from '../ui/common';
 import { D, sel, rightTab } from '../designer/state';
 import { aiSettings, aiOn, isDesktop, LOCKED, saveAiSettings, type AiSettings } from './settings';
 import { panelOpen, pinned, setPinned, mode, thread, busy, send, status, STATUS_TEXT, togglePanel, planOf, sheetInfo, patchItem, provider, providerList, appliedOnce, push, type Item, type Question, type BomRow, type Mode } from './session';
-import { aiLog, userApply, userDiscard, propose } from './api';
+import { aiLog, mcpLast, MCP_ACTIVE_MS, userApply, userDiscard, propose } from './api';
 import { stopRun } from './providers';
 import { planSummary } from './plans';
 
@@ -32,9 +32,13 @@ const MODES: [Mode, string][] = [['build', 'Build'], ['ask', 'Ask'], ['fix', 'Fi
 export function AiPanel({ docked }: { docked?: boolean }) {
   const p = provider.value; const items = thread.value; const end = useRef<HTMLDivElement>(null);
   useEffect(() => { end.current?.scrollIntoView({ block: 'end' }); }, [items.length, busy.value]);
+  // an outside AI app driving HYDRA over MCP (section B of Connect) — separate from the in-panel provider above
+  const [, tick] = useState(0); useEffect(() => { const i = setInterval(() => tick(x => x + 1), 15e3); return () => clearInterval(i); }, []);
+  const m = mcpLast.value; const mcp = m && Date.now() - m.t < MCP_ACTIVE_MS ? m.client || t('AI app') : '';
   return <div class={'aibody' + (docked ? ' docked' : '')}>
     <header class="aihead"><Icon name="sparkles" size={14} /><b>HYDRA AI</b>
       <button class="aipill" title={t('Change AI')} onClick={() => S.openModal('aiconnect')}><i class={'aidot ' + status.value} />{p ? p.label : t('Not connected')}<Icon name="chevron-down" size={12} /></button>
+      {mcp && <span class="aipill aimcp" title={`${t('Last MCP call')}: ${new Date(m!.t).toLocaleTimeString()}${m!.ok ? '' : ' · ' + t('Error')}`}><i class={'aidot ' + (m!.ok ? 'ready' : 'error')} />MCP: {mcp} · {t('active')}</span>}
       <div class="grow" />
       <button class="iconbtn" title={pinned.value ? t('Float over the canvas') : t('Pin to the right dock')} aria-label={t('Pin')} onClick={() => { const v = !pinned.value; setPinned(v); if (v && D.value) rightTab.value = 'ai' as any; else if (!v && (rightTab.value as string) === 'ai') rightTab.value = 'props'; }}><Icon name={pinned.value ? 'pin-off' : 'pin'} size={14} /></button>
       {!docked && <button class="iconbtn" title={t('Close')} aria-label={t('Close')} onClick={() => togglePanel(false)}><Icon name="x" size={14} /></button>}
@@ -42,7 +46,8 @@ export function AiPanel({ docked }: { docked?: boolean }) {
     <div class="aimodes" role="tablist">{MODES.map(([k, l]) => <button role="tab" aria-selected={mode.value === k} class={mode.value === k ? 'on' : ''} onClick={() => mode.value = k}>{t(l)}</button>)}</div>
     <div class="aithread">
       {!items.length && <div class="aiempty"><Icon name="message-square" size={22} /><p>{p ? t('Describe a circuit, ask about the sheet, or let the AI find errors.') : t('No AI is connected yet.')}</p>
-        {!p && <Btn icon="plug" label={t('Connect an AI…')} onClick={() => S.openModal('aiconnect')} />}</div>}
+        {mcp && <p class="aimcpnote">{t('{{c}} is using HYDRA over MCP. Its commands show in the AI log; plans to approve appear here.', { c: mcp })}</p>}
+        {!p &&<Btn icon="plug" label={t('Connect an AI…')} onClick={() => S.openModal('aiconnect')} />}</div>}
       {items.map(it => <ItemView it={it} />)}
       {busy.value && <div class="aimsg ai busy"><span class="aidots"><i /><i /><i /></span>{p?.source === 'cli' && <button class="link aistop" onClick={stopRun}>{t('Stop')}</button>}</div>}
       <div ref={end} />

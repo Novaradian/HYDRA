@@ -666,6 +666,8 @@ html.paper-theme .dcanvas svg rect[filter="url(#dshadow)"]{fill:var(--paper)}
 .aibody.docked{height:100%}
 .aihead{display:flex;align-items:center;gap:6px;padding:6px 8px;border-bottom:1px solid var(--line);background:var(--hdr);font-size:12px}
 .aipill{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line2);background:var(--panel);font-size:11px;padding:2px 6px;color:var(--ink2);cursor:pointer}
+.aimcp{cursor:default;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.aimcpnote{color:var(--ink2);margin:0}
 .aimodes{display:flex;gap:0;border-bottom:1px solid var(--line);background:var(--soft);padding:0 6px}
 .aimodes button{border:0;background:none;padding:6px 9px;font-size:11.5px;color:var(--mute);border-bottom:2px solid transparent;cursor:pointer}
 .aimodes button.on{color:var(--acc);border-bottom-color:var(--acc);font-weight:600}
